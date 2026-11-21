@@ -1,0 +1,136 @@
+{
+  "categories": [
+    {
+      "id": "digital_arrest",
+      "display_name_en": "Government Impersonation / Digital Arrest",
+      "display_name_hi": "सरकारी अधिकारी बनकर धमकी / डिजिटल अरेस्ट",
+      "required_any_groups": [
+        ["police", "cbi", "ed officer", "enforcement directorate", "ncb", "customs", "cyber cell", "supreme court", "inspector", "पुलिस", "सीबीआई", "कस्टम", "साइबर सेल", "इंस्पेक्टर", "नारकोटिक्स", "cbi se", "cyber cell se", "police wale"],
+        ["arrest", "arrested", "fir", "case registered", "warrant", "digital arrest", "illegal items", "money laundering", "narcotics", "drugs", "गिरफ्तार", "गिरफ्तारी", "जेल", "मुकदमा", "एफआईआर", "वारंट", "अवैध सामान", "giraftar", "case darj", "fir darj", "illegal parcel"]
+      ],
+      "boosters": ["don't tell anyone", "do not tell anyone", "do not cut this call", "stay on the call", "safe account", "rbi safe account", "clear your name", "family will be involved", "किसी को न बताएं", "कॉल मत काटिए", "kisi ko mat batana", "call kaat mat"],
+      "base_weight": 35
+    },
+    {
+      "id": "remote_access",
+      "display_name_en": "Remote-Access / Screen-Share Fraud",
+      "display_name_hi": "रिमोट एक्सेस / स्क्रीन शेयरिंग धोखाधड़ी",
+      "required_any_groups": [
+        ["anydesk", "teamviewer", "quicksupport", "rustdesk", "airdroid", "chrome remote", "screen share", "remote access", "remote support", "install", "download app", ".apk", "apk", "एनीडेस्क", "टीमव्यूअर", "क्विकसपोर्ट", "स्क्रीन शेयर", "ऐप इंस्टॉल", "ऐप डाउनलोड", "app install", "app download"],
+        ["9 digit code", "9-digit code", "code you see", "refund", "kyc", "support", "session id", "connection code", "permission", "9 अंकों का कोड", "कोड बताएं", "रिफंड", "9 digit code batao", "screen dikhao"]
+      ],
+      "boosters": ["anydesk", "teamviewer", "quicksupport", "rustdesk", ".apk", "9 digit code", "9-digit code"],
+      "base_weight": 35
+    },
+    {
+      "id": "otp_theft",
+      "display_name_en": "OTP / Credential Theft",
+      "display_name_hi": "ओटीपी / पिन चोरी",
+      "required_any_groups": [
+        ["otp", "one time password", "verification code", "upi pin", "atm pin", "mpin", "cvv", "password", "ओटीपी", "पिन", "पासवर्ड", "सीवीवी"],
+        ["share", "send", "tell", "provide", "forward", "enter", "confirm", "read out", "बताएं", "भेजें", "साझा", "दें", "batao", "bataiye", "bhejo", "bhejein", "share karo", "dalo"]
+      ],
+      "boosters": ["verify", "cancel", "refund", "blocked", "immediately", "तुरंत", "turant"],
+      "base_weight": 30
+    },
+    {
+      "id": "kyc_fraud",
+      "display_name_en": "KYC / Account Suspension Fraud",
+      "display_name_hi": "केवाईसी / खाता बंद होने का झांसा",
+      "required_any_groups": [
+        ["kyc", "re-kyc", "e-kyc", "pan", "aadhaar", "aadhar", "केवाईसी", "पैन", "आधार"],
+        ["blocked", "suspended", "deactivated", "update", "verify", "expire", "band ho jayega", "block ho jayega", "बंद हो जाएगा", "ब्लॉक", "अपडेट", "सत्यापित"]
+      ],
+      "boosters": ["sbi", "hdfc", "icici", "axis", "pnb", "paytm", "bank", "बैंक", "link", "लिंक", "immediately", "today", "aaj raat", "आज रात", "तुरंत"],
+      "base_weight": 26
+    },
+    {
+      "id": "utility_disconnection",
+      "display_name_en": "Utility / Electricity Disconnection Fraud",
+      "display_name_hi": "बिजली / सेवा कनेक्शन कटने का डर",
+      "required_any_groups": [
+        ["electricity", "power", "gas", "water", "sim", "telecom", "trai", "mobile number", "connection", "बिजली", "विद्युत", "कनेक्शन", "सिम", "bijli", "connection"],
+        ["disconnected", "disconnect", "disconnection", "cut", "blocked", "suspended", "tonight", "band", "कनेक्शन कट", "काट दी जाएगी", "बंद हो जाएगा", "kat jayegi", "kat jayega", "band ho jayega"]
+      ],
+      "boosters": ["pay", "verification amount", "verify", "link", "officer", "call", "tonight", "aaj raat", "आज रात", "भुगतान"],
+      "base_weight": 28
+    },
+    {
+      "id": "lottery_prize",
+      "display_name_en": "Lottery / Prize Scam",
+      "display_name_hi": "लॉटरी / इनाम धोखाधड़ी",
+      "required_any_groups": [
+        ["won", "winner", "lottery", "prize", "kbc", "jackpot", "lucky draw", "जीते", "इनाम", "लॉटरी", "केबीसी", "jeeta", "lottery lagi"],
+        ["fee", "processing fee", "tax", "claim", "pay", "deposit", "registration", "link", "फीस", "भुगतान", "क्लेम", "जमा", "jama", "bhejo"]
+      ],
+      "boosters": ["congratulations", "lakh", "crore", "₹", "rs", "बधाई हो"],
+      "base_weight": 28
+    },
+    {
+      "id": "job_fraud",
+      "display_name_en": "Job / Part-Time Work Fraud",
+      "display_name_hi": "नौकरी / पार्ट-टाइम काम का झांसा",
+      "required_any_groups": [
+        ["part time", "part-time", "work from home", "job", "earn", "daily payout", "prepaid task", "पार्ट टाइम", "घर बैठे कमाएं", "नौकरी", "रोज कमाएं", "part time kaam", "ghar baithe kamao"],
+        ["registration fee", "fee", "deposit", "pay", "upi", "investment", "फीस", "जमा", "रजिस्ट्रेशन", "bhejo", "jama"]
+      ],
+      "boosters": ["5000/day", "per day", "no experience", "easy money", "telegram", "whatsapp"],
+      "base_weight": 28
+    },
+    {
+      "id": "investment_fraud",
+      "display_name_en": "Investment / Trading Fraud",
+      "display_name_hi": "निवेश / ट्रेडिंग मुनाफे का झांसा",
+      "required_any_groups": [
+        ["guaranteed", "returns", "5x", "10x", "double your money", "profit", "stock tips", "crypto", "trading", "गारंटीड", "मुनाफा", "दोगुना", "निवेश", "paisa double", "5x return"],
+        ["join", "whatsapp group", "telegram", "deposit", "invest", "transfer", "pay", "ग्रुप", "जमा", "निवेश", "bhejo", "jama"]
+      ],
+      "boosters": ["vip", "7 days", "risk free", "guaranteed returns", "now", "abhi"],
+      "base_weight": 26
+    },
+    {
+      "id": "delivery_fraud",
+      "display_name_en": "Delivery / Parcel / Customs Fraud",
+      "display_name_hi": "पार्सल / डिलीवरी / कस्टम्स धोखाधड़ी",
+      "required_any_groups": [
+        ["parcel", "courier", "package", "delivery", "customs", "fedex", "dhl", "india post", "पार्सल", "डिलीवरी", "कस्टम", "डाक"],
+        ["pay", "fee", "release", "duty", "address", "link", "track", "blocked", "held", "शुल्क", "भुगतान", "लिंक", "छुड़ाने"]
+      ],
+      "boosters": ["₹10", "rs 10", "re-delivery", "customs clearance", ".top", ".xyz", "click"],
+      "base_weight": 26
+    },
+    {
+      "id": "payment_refund",
+      "display_name_en": "Payment / UPI Refund Fraud",
+      "display_name_hi": "यूपीआई रिफंड / पेमेंट लिंक धोखाधड़ी",
+      "required_any_groups": [
+        ["refund", "cashback", "money received", "wrong transfer", "collect request", "qr", "upi", "रिफंड", "कैशबैक", "यूपीआई", "क्यूआर"],
+        ["scan qr", "enter pin", "upi pin", "accept", "approve", "pay", "link", "पिन डालें", "क्यूआर स्कैन", "pin dalo", "collect"]
+      ],
+      "boosters": ["receive money", "get refund", "claim", "expire", "turant"],
+      "base_weight": 28
+    },
+    {
+      "id": "banking_fraud",
+      "display_name_en": "Banking Fraud",
+      "display_name_hi": "बैंकिंग धोखाधड़ी",
+      "required_any_groups": [
+        ["bank", "account", "sbi", "hdfc", "icici", "axis", "pnb", "kotak", "debit card", "credit card", "netbanking", "बैंक", "खाता", "khata"],
+        ["blocked", "suspended", "freeze", "verify", "update", "unauthorised", "closed", "बंद", "ब्लॉक", "फ्रीज", "सत्यापित"]
+      ],
+      "boosters": ["link", "click", "login", "immediately", "today", "aaj raat", "cvv", "pin"],
+      "base_weight": 24
+    },
+    {
+      "id": "other_suspicious",
+      "display_name_en": "Other Suspicious Activity",
+      "display_name_hi": "अन्य संदिग्ध गतिविधि",
+      "required_any_groups": [
+        ["urgent", "immediately", "verify", "suspended", "blocked", "तुरंत", "ब्लॉक", "turant"],
+        ["click", "pay", "send", "share", "transfer", "link", "लिंक", "भेजें", "bhejo"]
+      ],
+      "boosters": [],
+      "base_weight": 15
+    }
+  ]
+}

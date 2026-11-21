@@ -1,0 +1,9 @@
+{
+  "two_level_suffixes": [
+    "co.in", "gov.in", "org.in", "ac.in", "nic.in", "net.in", "edu.in",
+    "res.in", "gen.in", "ind.in", "firm.in",
+    "co.uk", "org.uk", "gov.uk", "ac.uk",
+    "com.au", "net.au", "org.au", "gov.au",
+    "co.jp", "co.nz", "com.sg", "com.br", "bank.in"
+  ]
+}

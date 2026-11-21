@@ -1,0 +1,17 @@
+{
+  "suspicious_tlds": [
+    "xyz", "top", "click", "live", "icu", "buzz", "loan", "work",
+    "cfd", "sbs", "rest", "monster", "support", "link", "site", "online",
+    "tk", "ml", "ga", "cf", "gq", "club", "info", "vip", "cc", "win", "bid"
+  ],
+  "shorteners": [
+    "bit.ly", "tinyurl.com", "t.co", "cutt.ly", "rb.gy", "is.gd",
+    "shorturl.at", "ow.ly", "goo.gl", "tiny.cc", "rebrand.ly", "buff.ly",
+    "short.io", "bl.ink", "v.gd", "s.id", "x.co", "t.ly", "lnkd.in"
+  ],
+  "suspicious_path_keywords": [
+    "login", "verify", "kyc", "update", "secure", "refund", "claim",
+    "wallet", "reward", "otp", "pin", "unblock", "reactivate", "pan",
+    "aadhaar", "parcel", "customs", "release", "pay", "signin"
+  ]
+}

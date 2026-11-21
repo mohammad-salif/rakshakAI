@@ -1,0 +1,435 @@
+# RakshakAI — Android APK Build Prompt
+
+> Paste everything below into your AI coding agent (Claude Code / Cursor / Windsurf, etc.).
+> Source documents: "On-Device Scam Shield PRD" (ML sections intentionally excluded) + "RakshakAI Final Feature Strategy" (20 features).
+
+---
+
+## 0. ROLE & GOAL
+
+You are a senior Android engineer. Build a complete, working, installable **Android app (debug APK)** called **RakshakAI — Your Intelligent Digital Guardian**.
+
+RakshakAI is a **privacy-first, predictive scam-defence app** for India. Most scam apps ask *"Is this message a scam?"*. RakshakAI asks **"What does the scammer want the person to do next, what might they try after that, and how do we stop the user before harm happens?"**
+
+Core user journey: **Understand the scam → Predict the next move → Recognise pressure → Intervene before harm → Preserve evidence & guide recovery.**
+
+Four pillars: **DETECT** (understand messages/links/conversations) · **PREDICT** (forecast the next scam stage) · **PREVENT** (warn before risky actions/payments) · **PROTECT** (preserve evidence, keep analysis on-device).
+
+Primary users: elderly smartphone users, regular users, digitally inexperienced users, and family members who help them. Primary market: India. Languages: **English, Hindi (Devanagari) and Hinglish**.
+
+Work autonomously. When something is ambiguous, pick the most reasonable option, note it in `docs/DECISIONS.md`, and keep going. Compile after every phase (see §14). The final deliverable is a **buildable Gradle project + `app-debug.apk`** and a short README.
+
+---
+
+## 1. HARD CONSTRAINTS (read first, never violate)
+
+1. **NO machine-learning training, NO datasets, NO TFLite/ONNX/PyTorch model files, NO `ml/` folder.** All detection is a **deterministic, explainable, rule-based + weighted-scoring engine written in Kotlin**, driven by JSON rule files in `assets/rules/`. (Architecture must keep the detector behind an interface so an ML model could be plugged in later, but do not build one.)
+2. **Do NOT declare the `INTERNET` permission** (nor `ACCESS_NETWORK_STATE`). The app must be structurally incapable of uploading user content. Do not add Firebase, analytics, ads, crash-reporting SDKs, Coil/Glide network loaders, or any dependency that requires internet. Show this fact in the Privacy Centre.
+3. **Everything is on-device and works in airplane mode.** OCR and QR decoding must use **bundled** models/libraries (ML Kit *bundled* text-recognition and barcode-scanning artifacts, not the Play-services "unbundled" ones that download models). ML Kit is used only as an OCR/QR library — no custom ML.
+4. **No cloud AI / LLM calls.** Urgent safety guidance (Emergency Assistant) is a static decision tree, never dependent on a model.
+5. **Never auto-open a scanned URL. Never initiate a payment. Never delete SMS/WhatsApp messages.** "Quarantine" means moving a copy into the app's own encrypted store.
+6. **Honest-claims rule.** Do not claim (in UI text, README or store text) real-time call monitoring, WhatsApp access, message deletion, payment blocking or "100% offline" unless that exact capability is implemented and works. Anything simulated must carry a visible **"SIMULATED / DEMO"** badge. A risk score is **not proof of fraud**; forecasts are **possibilities, not certainties**; "coercion score" is a **pressure-risk estimate, not a psychological diagnosis**.
+7. **Explain, don't just score.** Every elevated-risk result must show: *What was detected → Why it is suspicious → What could happen → What to do next.* Distinguish *observed evidence* from *inferred risk*.
+8. **Ask before deleting or sharing.** Every share/alert/export/delete needs an explicit user confirmation. No raw message text in logs (use `Log` only for non-sensitive events; strip logs in release).
+9. Do not claim an organisation/person "is a scammer". Use: *suspicious* / *insufficient evidence* / *low risk (not a guarantee)*.
+
+---
+
+## 2. TECH STACK & PROJECT STRUCTURE
+
+- **Language/UI:** Kotlin + Jetpack Compose (Material 3). **Architecture:** MVVM + Clean Architecture, Hilt (or manual DI if simpler).
+- **Min SDK 29 (Android 10)**, target/compile = latest stable. Gradle Kotlin DSL + version catalog. Use latest stable, mutually compatible dependency versions.
+- **Libraries:** Navigation-Compose, Room (+KSP), DataStore (settings), WorkManager (only if needed), AndroidX Biometric, CameraX + ML Kit **bundled** barcode-scanning (live QR scan), ML Kit **bundled** text-recognition (Latin + Devanagari) for screenshots, ZXing-core (decode QR from gallery image), Android `TextToSpeech` (voice warnings), Android Keystore (AES-GCM) for encryption.
+- **Package:** `com.rakshakai.app`
+
+```
+rakshakai/
+├── app/src/main/
+│   ├── java/com/rakshakai/app/
+│   │   ├── presentation/   (screens/, components/, navigation/, theme/)
+│   │   ├── domain/         (models/, usecases/, repositories/)
+│   │   ├── data/           (database/, preferences/, repositories/)
+│   │   ├── detection/
+│   │   │   ├── engine/            ScamEngine (facade), TextPreprocessor, LanguageDetector
+│   │   │   ├── intent/            IntentDetector (OTP / money / personal info / app install / link click)
+│   │   │   ├── manipulation/      ManipulationDetector (fear, urgency, authority, false trust, isolation, greed)
+│   │   │   ├── category/          ScamCategoryClassifier (rules)
+│   │   │   ├── url/               UrlExtractor, UrlAnalyzer, BrandImpersonationDetector
+│   │   │   ├── upi/               UpiQrAnalyzer
+│   │   │   ├── conversation/      ConversationSplitter, KillChainTracker, NextMoveForecaster
+│   │   │   ├── risk/              RiskFusionEngine, CoercionPressureEstimator, CrossSignalEngine
+│   │   │   └── explain/           ExplanationEngine, RecommendationEngine (en + hi templates)
+│   │   ├── privacy/        (encryption/KeystoreCrypto, data_management/)
+│   │   └── integrations/   (share/, sms/, notifications/, ocr/, qr/, tts/, appscan/)
+│   ├── assets/rules/       (lexicon_en.json, lexicon_hi.json, lexicon_hinglish.json, categories.json,
+│   │                        brands.json, suspicious_tlds.json, public_suffixes.json,
+│   │                        stage_transitions.json, explanations_en.json, explanations_hi.json)
+│   └── res/ (values/strings.xml, values-hi/strings.xml, …)
+├── app/src/test/           (JUnit tests for the engine — see §12)
+└── docs/ (ARCHITECTURE.md, PRIVACY.md, DECISIONS.md, TESTING.md)
+```
+
+Keep detection code **pure Kotlin (no Android deps)** where possible so it is unit-testable.
+
+---
+
+## 3. NAVIGATION & SCREENS
+
+Splash → Onboarding (once) → Main with **bottom navigation (5 tabs)**:
+
+| Tab | Contents |
+|---|---|
+| **Home** | Protection status card ("Protected · Works offline · No internet permission"), big quick actions (Scan Message, Scan Link, Scan Screenshot, Scan QR), "Emergency — I think I was scammed" red button, recent scans (last 3), Safety Centre shortcut |
+| **Scan** | Scan hub: Message · Conversation · Link · QR/UPI · Screenshot · Call Transcript |
+| **Protect** | Pre-Action Safety Check · Scam Emergency Assistant · Isolation Breaker / trusted contacts · Family Guardian · Simulation Lab (simulated signals) |
+| **Vault** | Evidence Vault · Quarantine · Scam Replay Timeline · Scan History |
+| **More** | Privacy Centre · Safety Centre (education) · Settings (language, elderly mode, history on/off, SMS auto-scan, notifications, delete all data) · About/Limitations |
+
+Other screens: **Result screen** (shared by all scanners), **Conversation timeline screen**, **Pre-Action intervention (full-screen)**, **Isolation Breaker intervention (full-screen)**, **Emergency flow screens**, **Guardian dashboard (simulated)**.
+
+**Onboarding (4 steps):** Welcome → Privacy explanation ("analysis runs on your phone; this app has no internet permission") → Language selection (English / हिन्दी / Hinglish-friendly) → Optional setup (share-to-scan info, notification permission, optional SMS auto-scan — all skippable, each with a plain-language reason).
+
+---
+
+## 4. FEATURE SPECIFICATIONS
+
+Implement all features below. Priority = build order (P0 first).
+
+### Pillar A — Scam Intelligence
+
+**A1. AI Scam Message Investigator (P0)**
+- Inputs: paste text; **Android Share target** (`ACTION_SEND`, `text/plain`) so a user can long-press a WhatsApp/Telegram/SMS message → Share → RakshakAI; optional SMS auto-scan (see D-extras). Treat shared WhatsApp text as user-provided input; never claim direct WhatsApp access.
+- Output: scam category, 0–100 risk score, 4-level risk, confidence (Low/Med/High), highlighted evidence phrases inside the original text (use `AnnotatedString`), explanation, recommendations. Language auto-detect (English / Hindi / Hinglish / mixed) with manual override.
+- Scam categories: banking fraud, KYC fraud, OTP theft, lottery/prize, job fraud, investment fraud, government impersonation (Aadhaar/police/CBI/customs/"digital arrest"), delivery/parcel fraud, payment/refund fraud, remote-access fraud, utility-disconnection fraud, "unknown/other suspicious".
+
+**A2. Hidden Intention & Manipulation Detector (P0)**
+Return a structured object: `intent[]` (OTP, money, personal-info, app-install, link-click, call-back), `requestedAction`, `manipulation[]` (fear, urgency, authority, false-trust, isolation, greed/reward), `evidence[]` (matched phrase + span + why), `risk`. UI shows a card **"What the sender wants you to do"** and **"Pressure tactics used"** with plain-language explanations.
+
+**A3. Conversation Trap Detector (P0)**
+- Input: multi-message paste (auto-split on line patterns like `[10:32] Name:`, `Name:` prefixes, or blank-line separated blocks) **plus** a manual "add another message" chat-style composer with sender (Them / Me) tag.
+- Classify each message with the A1/A2 engine, then combine into a chronological **timeline** with a stage chip per message and a cumulative risk that can exceed any single message's risk (e.g., innocuous hello → authority claim → "don't tell anyone" → payment demand).
+
+**A4. Next-Move Forecaster (P0)**
+Transparent **stage-transition table** (`stage_transitions.json`), not a black box. Given observed stages, show **"Possible next move"** (1–2 items, each with a *Likely / Possible / Less likely* label — never percentages presented as fact) and a **safety recommendation** for each. Wording must say "may", "could", "possible".
+
+**A5. Scam Kill-Chain & Contextual Risk Engine (P0)**
+State machine over stages:
+`S1 Hook/Contact → S2 Authority/Trust → S3 Fear/Urgency → S4 Isolation → S5 Action request (link / app install / OTP / ID) → S6 Payment demand → S7 Post-payment escalation`.
+Interactive kill-chain bar (tappable stage nodes) showing reached stages, the current stage, and the likely next stage. Display each contributing signal and its weight in a "Why this score?" expandable section.
+
+### Pillar B — Link & Payment Protection
+
+**B6. AI Scam Link Investigator (P0)** — see §6.4 for the checks. Extract URLs from any text; also a standalone "paste a link" scanner. Explain each red flag in plain language. Shortened links → "Destination not verified — treat with caution". **HTTPS is never treated as proof of safety.** Never open the link; provide only "Copy link" and "Open in browser anyway" (hidden behind a confirm dialog + Pre-Action check for High+/Uncertain results).
+
+**B7. Fake Website & Brand Impersonation Detector (P1)** — compare *claimed brand* (from message text or user-selected) with the actual registered domain using `brands.json` (seed list; see §6.4). Mismatch = **warning signal, not proof**.
+
+**B8. QR Code & UPI Scam Investigator (P1)** — scan QR via camera or pick image; decode; branch on payload: URL → URL analyzer; `upi://pay?...` → parse `pa, pn, am, tn, cu` and warn about classic tricks (*"You never need to scan a QR or enter your UPI PIN to RECEIVE money"*, preset amount on a "refund/prize" story, payee name mismatch vs claimed brand, collect-request pressure); plain text/other → show type + generic caution. **Never launch a payment intent.**
+
+**B9. Pre-Action Safety Check (P0 — signature feature)**
+Full-screen pause-and-verify flow, launched from results ("Before I click / pay / install / share") or from Protect tab. User picks the action (Open link · Pay via UPI · Install app · Share OTP/PIN · Share ID document · Transfer money) and answers quick chips: *Do I personally know this payee?* · *Was I told to hurry?* · *Was I told not to tell anyone?* · *Did this start with an unexpected call/message?* · amount range. Decision engine combines latest scan risk + answers → **Proceed carefully / Pause & verify / Stop — do not proceed**. For Pause/Stop show a **10-second forced pause** (disabled "Continue anyway" button with countdown), then verification steps ("Call your bank using the number on your card", "Ask a family member"). Include a visible note: *"This is a reminder and safety check. RakshakAI cannot lock or block payments made in other apps."*
+
+**B10. Cross-Signal Intervention Engine (P1)**
+Weighted signal fusion of: message risk, conversation risk, link risk, call-transcript risk, **app signal** (remote-access tool installed — real check + simulated toggle), **payment context** (from Pre-Action answers). Configurable thresholds in a JSON/consts file. Output a higher-risk situation alert with **"Which signals contributed"** list. Weak signals alone stay Medium; several together escalate to High/Critical.
+
+### Pillar C — Coercion & Human Protection
+
+**C11. Coercion & Pressure Score (P1)** — 0–100 **pressure-risk estimate** from: conversation stages reached, tactic density, and *user-provided/simulated* answers ("I've been told to stay on the call", "told not to tell anyone", "given a deadline", "threatened with arrest/blocking"). Label: *"Pressure-risk estimate — not a diagnosis."*
+
+**C12. Isolation Breaker (P1)** — when pressure/overall risk crosses the High threshold (or isolation tactic detected), show a calm, large-type full-screen: "Pause. Real banks and police never ask you to keep this secret." with 3 buttons: **Call a trusted person**, **Send alert to trusted contact**, **Pause & verify steps**. The alert is a **pre-filled SMS/WhatsApp share intent** (`ACTION_SENDTO sms:` / share sheet) containing **only risk level + time + "please call me"** — never message content. User taps send themselves (no SMS permission needed). Payment pause is a reminder, not a lock.
+
+**C13. Live Call Scam Shield (P2, transcript-based)** — paste or import a call transcript; also a **"Play scripted demo call"** (e.g., fake "CBI officer / digital arrest" script revealed line by line) that updates the kill-chain live. Badge: **"TRANSCRIPT / SIMULATED — RakshakAI does not record or listen to real calls."**
+
+**C14. Remote Access & Fake App Guard (P1)**
+- **Real check:** using `PackageManager` with a narrow `<queries>` list (no `QUERY_ALL_PACKAGES`), detect whether known remote-access apps are installed (AnyDesk `com.anydesk.anydeskandroid`, TeamViewer QuickSupport `com.teamviewer.quicksupport.market`, TeamViewer `com.teamviewer.teamviewer.market.mobile`, RustDesk `com.carriez.flutter_hbb`, AirDroid `com.sand.airdroid`, Chrome Remote Desktop `com.google.chromeremotedesktop`). If found *and* a recent scan/conversation shows financial or remote-access pressure → raise a cross-signal warning with steps.
+- **Simulated:** Simulation Lab toggles ("A caller asked me to install an app", "Screen sharing is on") with SIMULATED badge.
+- Also warn when a message/conversation asks the user to install an app/APK or share a 9-digit code.
+
+**C15. Scam Emergency Assistant (P0)** — red "I think I was scammed" button. **Static decision tree** (works offline, no model): *What happened?* → Shared OTP/PIN · Sent money · Installed an app · Clicked a link / entered details · Shared Aadhaar/PAN/ID · Not sure. Each path gives numbered immediate steps (e.g., call your bank's official helpline to block card/UPI, call **1930** (National Cyber Crime Helpline), report at **cybercrime.gov.in**, uninstall the remote app / disconnect internet, change passwords, note transaction IDs), an **evidence checklist** (screenshots, transaction IDs, phone numbers, URLs, time), and an auto-generated **complaint draft** (plain text with date/time, incident type, amount, payee/UPI ID if entered, URLs/numbers, short narrative) that the user can edit, **copy or share**. Add a note to verify helpline numbers on official sites.
+
+### Pillar D — Evidence, Privacy & Long-Term Safety
+
+**D16. Screenshot & Image Investigator (P1)** — pick image (gallery / share-target for `image/*`) → on-device ML Kit OCR (Latin + Devanagari) → show extracted text (editable) → same A1/A2 engine → highlight suspicious phrases, scan any QR in the image too. Everything local; the image is not saved unless the user saves it to the Vault.
+
+**D17. Smart Scam Quarantine (P1)** — app-level only. "Move to Quarantine" stores an encrypted copy of the scanned text/URL; list with Review / Restore (back to scanner) / Delete forever (confirm). Add a visible note: *"Your original SMS/WhatsApp message is not touched. Android doesn't let this app delete messages in other apps."* (If Android SMS role features are not implemented, say so.)
+
+**D18. Encrypted Evidence Vault & Scam Replay Timeline (P0)** — save selected messages, conversations, screenshots, URLs, QR payloads with timestamps **only with consent**. Room + **AES-256-GCM** with a key in **Android Keystore**; screenshots as encrypted files in app-private storage; optional biometric/device-credential lock to open the Vault. Each evidence item: type, encrypted content, created-at, risk snapshot, user note. **Replay Timeline**: group items into an *Incident* and show them chronologically with stage chips ("Hook → Authority → Fear → Payment demand") and risk growth. Controls: **Export** (share a readable summary or ZIP of decrypted items after biometric confirm), **Delete item**, **Delete all**.
+
+**D19. Privacy-First Offline Protection Centre (P0)** — a live "proof" screen:
+- Processing: *On this device only.*
+- **Permissions card** reading the app's actual granted/declared permissions from `PackageManager` and showing **"Internet permission: NOT requested ✅"** (computed at runtime, not hard-coded).
+- Stored data: counts of history items, vault items, quarantine items, size on disk; "Delete everything" button.
+- "Offline test" helper: instructions + a button that runs the built-in sample scans and shows they work with airplane mode (detect connectivity not needed since no network permission — just say "turn on airplane mode and run").
+- Plainly state limitations (no WhatsApp access, no message deletion, can't block payments, SMS auto-scan optional).
+
+**D20. Family Guardian & Smart Safety Alerts (P1)** — manage trusted contacts (name + phone, stored locally, encrypted). **Real:** consent-based alert via pre-filled SMS/share intent with only risk level + time. **Simulated:** a **"Guardian dashboard (SIMULATED second device)"** screen that shows a mock feed ("Mom's phone — High risk at 3:12 PM — message content not shared"), so the concept can be demoed. Default = never share message content.
+
+### PRD-driven general features (P0/P1)
+
+- **Local Scan History:** list with date/time, risk level + score, category, short explanation, user feedback; open, delete one, clear all, **turn history off** (default: ON but stores *only* summary — score, category, explanation, timestamp — **not the raw text**; raw text is stored only via explicit "Save to Vault/Quarantine").
+- **User feedback on every result:** *Correct scam · False alarm (legit) · Missed something · Not sure.* Stored locally only; it does **not** retrain or change the engine (optionally let the user add a local "trusted sender/domain" allow-list entry).
+- **Elderly Mode / accessibility:** one toggle → larger font scale (≥18sp body), bigger buttons (≥56dp), high-contrast theme, simpler wording variants of explanations, **"Read aloud" (TextToSpeech) of the verdict and steps** in English/Hindi. Min 16sp default body text, ≥48dp touch targets, content descriptions for screen readers, **risk never conveyed by colour alone** (always icon + text label).
+- **Optional SMS auto-scan (OFF by default):** `RECEIVE_SMS` broadcast receiver → local analysis → notification only if score ≥ configurable threshold; notification must **hide message content on the lock screen** (public version shows only "Possible scam message — open RakshakAI"), dedupe repeated alerts. Not stored unless history is on (summary only). Explain permission in plain language before requesting; app must work fully without it.
+- **Notifications:** concise, show risk level, tap opens the Result screen.
+- **Safety Centre:** short, illustrated-by-icons lessons — common Indian scams (digital arrest, fake KYC, UPI refund/collect request, job & investment, parcel/customs, electricity disconnection, remote-access), "Golden rules" (never share OTP/PIN, banks never ask to keep secrets, verify via official app), and a small **Scam Awareness quiz/simulator** (safe examples, tap "scam or safe?").
+- **Simulation Lab:** buttons to load demo messages/conversations/call script/app-signal toggles so judges and users can try everything instantly. All labelled DEMO/SIMULATED.
+
+---
+
+## 5. DETECTION ENGINE — DESIGN (rule-based, explainable)
+
+### 5.1 Pipeline (target ≤ 2 s; typically < 100 ms)
+1. Validate input (max ~5,000 chars per message; show "text was truncated" if cut; never crash on empty/huge/malformed/emoji/RTL input).
+2. Normalise: Unicode NFKC, lowercase, strip zero-width chars, convert Devanagari digits, collapse whitespace, map common obfuscations (`0→o`, `@→a`, `$→s`, repeated chars) **only for matching**, keep original for display/highlight offsets.
+3. Language detect: Devanagari ratio → Hindi; Latin text with ≥N Hinglish marker words (`aap, aapka, karein, kijiye, turant, abhi, band, jayega, hai, ko, mat, batana, paisa, khata`) → Hinglish; else English; mixed → "Hindi-English mixed". Unsupported scripts → show **limited-analysis warning**.
+4. Extract URLs (http/https/www/bare domains with suspicious TLDs, shorteners, `upi://`, phone numbers, UPI IDs, amounts such as `₹5,000`, `Rs 500`).
+5. Run IntentDetector, ManipulationDetector, ScamCategoryClassifier (each returns matches with spans + weights).
+6. UrlAnalyzer on every URL.
+7. RiskFusionEngine → score, level, confidence, uncertainty flag.
+8. ExplanationEngine + RecommendationEngine (en/hi templates built **only from detected evidence**).
+
+### 5.2 Seed lexicon (expand each list to ≥40 phrases across en/hi/hinglish in `assets/rules/*.json`, with weights 1–5; matching must be word-boundary/phrase aware to avoid false hits)
+
+- **Urgency:** immediately, urgent(ly), right now, today only, tonight, within 24 hours, last chance, final notice, expires, act fast / turant, abhi, jaldi, aaj hi, aaj raat, warna / तुरंत, अभी, जल्दी, आज ही, आज रात, तत्काल, वरना
+- **Fear/threat:** blocked, suspended, deactivated, disconnected, freeze, legal action, arrest, FIR, case registered, penalty, SIM will be blocked / band ho jayega, block ho jayega, giraftar, jail, case darj / बंद हो जाएगा, ब्लॉक, गिरफ्तार, जेल, मुकदमा, जुर्माना, कनेक्शन कट
+- **Authority/impersonation:** bank, RBI, SBI/HDFC/ICICI/Axis/PNB, police, CBI, ED, NCB, customs, TRAI, UIDAI, income tax, court, cyber cell, officer, FedEx/DHL, "KYC team" / पुलिस, बैंक, आधार, सीबीआई, कस्टम
+- **Greed/reward:** won, winner, lottery, prize, KBC, cashback, refund, guaranteed returns, 5x, double your money, free gift / जीते, इनाम, लॉटरी, रिफंड
+- **Isolation:** don't tell anyone, keep confidential, do not disconnect, stay on the call, don't inform family, secret / kisi ko mat batana, call kaat mat, phone band mat karna / किसी को न बताएं, कॉल मत काटिए, गोपनीय
+- **False trust:** "official", "verified", "government approved", "dear customer", employee ID/badge numbers, "for your safety"
+- **Intent — OTP/credentials:** otp, one time password, verification code, pin, UPI PIN, cvv, password, card number, expiry / ओटीपी, पिन, पासवर्ड, कार्ड नंबर
+- **Intent — personal info:** aadhaar, pan, passport, selfie, account number, ifsc, date of birth, KYC update
+- **Intent — money:** transfer, send, pay, fee, processing fee, registration fee, deposit, safe account, security deposit, gift card, UPI ID, collect request / जमा करें, ट्रांसफर, फीस, भुगतान
+- **Intent — app install:** install, download app, apk, AnyDesk, TeamViewer, QuickSupport, RustDesk, screen share, remote access, 9-digit code / ऐप इंस्टॉल, डाउनलोड
+- **Intent — link click:** click, tap, visit, open link, login here, verify here / link par click karein / लिंक पर क्लिक
+
+### 5.3 Category rules (`categories.json`)
+Each category = required-any groups + boosters, e.g.:
+- *Banking/KYC:* (bank/SBI/KYC/account) + (blocked/suspended/update/verify) (+ link) → high.
+- *OTP theft:* (otp/pin/cvv) + (share/send/tell/provide) → high, even without link.
+- *Digital-arrest/government impersonation:* (police/CBI/customs/narcotics/parcel/Aadhaar) + (arrest/case/FIR) + (isolation OR payment/"safe account") → critical.
+- *Lottery:* (won/winner/lottery/KBC) + (fee/tax/processing/claim) → high.
+- *Job:* (part-time/work from home/earn per day) + (registration/deposit/fee/UPI) → high.
+- *Investment:* (guaranteed/5x/double/returns/crypto/stock tips) + (group/join/deposit) → medium-high.
+- *Delivery:* (parcel/courier/customs/address/package) + (pay ₹/fee/release/link) → medium-high.
+- *Utility disconnection:* (electricity/gas/water/SIM/connection) + (disconnected/tonight) + (pay/verify/link) → high. *(Must catch unseen paraphrases like: "Your electricity connection will be disconnected tonight. Pay the verification amount using this link.")*
+- *Remote-access:* (install/download) + (AnyDesk/TeamViewer/app/code) + (refund/support/help) → critical.
+- Score a category by `Σ matched weights` normalised to 0–100; detect **combinations** (e.g., urgency + money request + link) rather than isolated keywords.
+
+### 5.4 URL / Brand analysis (`UrlAnalyzer`, `BrandImpersonationDetector`)
+Parse with a safe URL parser (try/catch, never throw). Compute **registered domain** using bundled `public_suffixes.json` (handle `.co.in`, `.gov.in`, `.org.in`, `.ac.in`, `.nic.in`, `.com`, `.in`, etc.). Points (cap 100):
+
+| Check | Points |
+|---|---|
+| IP address as host | +40 |
+| Punycode/IDN (`xn--`) or mixed-script host | +35 |
+| URL shortener (bit.ly, tinyurl, t.co, cutt.ly, rb.gy, is.gd, shorturl.at…) | +25, label "Uncertain — destination not verified" |
+| Suspicious TLD (`.xyz .top .click .live .icu .buzz .loan .work .cfd .sbs .rest .monster .support .link .site .online`) | +20 |
+| `@` in URL / credentials in URL | +30 |
+| ≥4 host labels / deep subdomain nesting | +15 |
+| Brand name appears in subdomain or path but registered domain ≠ brand's official domain (`sbi.co.in.attacker.test`) | +45 |
+| Lookalike of an official domain (Levenshtein ≤2, or substitutions 0/o, 1/l/i, rn/m, vv/w, hyphen-padding like `sbi-kyc-update`) | +45 |
+| Keywords in host/path: login, verify, kyc, update, secure, refund, claim, wallet, reward, otp | +15 |
+| ≥3 hyphens / very long URL (>75 chars) / non-standard port | +10 each |
+| Direct `.apk` download | +45 |
+| Plain `http://` | +10 (**https gives no credit**) |
+| Exact match of a registered domain in `brands.json` | cap result at ≤10 → "Lower risk — matches known official domain" (still not a guarantee) |
+
+`brands.json` **seed list (editable, verify before relying on it):** SBI (sbi.co.in, onlinesbi.sbi, sbi.bank.in), HDFC (hdfcbank.com), ICICI (icicibank.com), Axis (axisbank.com), PNB (pnbindia.in), Kotak (kotak.com), Paytm (paytm.com), PhonePe (phonepe.com), Google Pay (pay.google.com), Amazon (amazon.in, amazon.com), Flipkart (flipkart.com), India Post (indiapost.gov.in), UIDAI (uidai.gov.in), Income Tax (incometax.gov.in), NPCI (npci.org.in), IRCTC (irctc.co.in), Jio (jio.com), Airtel (airtel.in). Each brand also lists aliases/keywords used to detect a *claimed brand* in message text.
+
+### 5.5 Risk fusion (`RiskFusionEngine`)
+Normalise component scores to 0–100:
+**M** = message/category score · **S** = social-engineering/manipulation score · **U** = max URL risk · **P** = sensitive-information-request score · **C** = context score (number of distinct intent types, stage escalation, very short text, user-supplied "unexpected sender").
+
+`R = 0.35·M + 0.20·S + 0.20·U + 0.15·P + 0.10·C` (weights in a config object; show them in "Why this score?").
+
+**Floor overrides (combination rules):**
+- OTP/PIN/CVV request **and** (urgency **or** threat) → R ≥ 70
+- Brand/URL mismatch **and** login/payment keywords → R ≥ 65
+- Remote-access tool/app install **and** code/refund/support story → R ≥ 80
+- Authority claim + (isolation) + (payment or "safe account") → R ≥ 85
+- Lottery/prize + upfront fee → R ≥ 70
+
+**Legit-message dampeners (reduce false positives):**
+- Standard bank OTP template ("… is your OTP … **Do not share** with anyone") with no link and no request to share → cap R ≤ 15
+- Purely informational text (order shipped, appointment reminder, bill due *without* link or request for secrets) → cap R ≤ 20
+- Urgency alone is **never** treated as proof (e.g., genuine "bill due 25 Nov").
+- Message mentions only an exact official domain and no request for secrets → cap R ≤ 25.
+
+**Levels:** 0–29 **Low** ("No strong indicators — not a guarantee of safety"), 30–59 **Medium** ("Verify before acting"), 60–79 **High** ("Avoid links, don't share information"), 80–100 **Critical**. Thresholds are initial defaults in config.
+
+**Uncertainty:** if only one indicator type, text <25 chars, unsupported language, or score in a 30–59 band with conflicting signals → show **"Uncertain / insufficient evidence"** instead of forcing safe/scam. **Confidence** = Low/Medium/High from number of independent indicator types and agreement among signals (not presented as a probability).
+
+### 5.6 Kill-chain stage mapping & forecaster (`stage_transitions.json`)
+Stage detection from tactics: Hook (unexpected contact/prize/job/parcel/bank alert) → Authority (impersonation) → Fear/Urgency (threat, deadline) → Isolation (secrecy, stay on call) → Action (link/app/OTP/ID) → Payment (transfer/fee/safe account/gift cards) → Post-payment (extra fees, new threats, silence).
+
+Forecast table (highest observed stage → possible next, label, safe advice). Example rows (store as data, extend):
+| Observed | Possible next (label) | Advice |
+|---|---|---|
+| Hook | Authority claim (Likely); Fear/urgency (Possible) | Don't reply; verify via official app/website you open yourself |
+| Authority | Fear/urgency (Likely); Isolation (Possible) | Real officials don't threaten over WhatsApp/SMS; hang up and call official number |
+| Fear/Urgency | Isolation (Possible); Action request – link/app/OTP (Likely) | Pause 10 minutes; ask family; never share OTP/PIN |
+| Isolation | Action request (Likely); Payment demand (Likely) | Break the secrecy — tell someone you trust now |
+| Action request | Payment demand (Likely) | Don't click/install; use Pre-Action Check |
+| Payment demand | Post-payment escalation (Likely) | Do not pay; call 1930 if already paid |
+| Post-payment | More fees / threats (Likely) | Stop contact; use Emergency Assistant |
+
+---
+
+## 6. EXPLANATION & RESULT UI CONTENT
+
+Result screen order (scrollable cards):
+1. **Risk header:** gauge/ring with score, level label + icon (⚠/✓/✖), one-line verdict, confidence, "Processed on this device".
+2. **What the sender wants you to do** (intent chips).
+3. **Pressure tactics used** (tactic chips + one-line meaning each).
+4. **Why this is suspicious** — evidence list; matched phrases highlighted in the original text; mark each item *Observed* or *Inferred*.
+5. **What could happen if you follow it.**
+6. **What to do now** (recommendations, simple language).
+7. **Possible next move** (forecaster card, for conversations/when stages ≥2).
+8. **Why this score?** (expandable: components M/S/U/P/C + overrides + dampeners).
+9. **Actions:** Pre-Action Check · Save to Vault · Quarantine · Alert trusted contact (High+) · Read aloud · Copy · Delete result.
+10. **Feedback row** (Correct / False alarm / Missed something / Not sure).
+11. Footer: *"A risk score is not proof of fraud. Predictions are possibilities, not certainties."*
+
+Tone for elderly mode — instead of "Credential harvesting and domain impersonation detected" show: **"Warning! This message may be fake. Someone could be trying to steal your bank details."** Provide full **Hindi** translations of all UI strings and explanation templates (`values-hi`, `explanations_hi.json`); the user can switch language at runtime (use per-app language APIs / AppCompatDelegate or Compose locale handling).
+
+---
+
+## 7. PRIVACY & SECURITY REQUIREMENTS
+
+- No `INTERNET` permission; no network libraries; no analytics. `android:allowBackup="false"` (or strictly configured backup rules excluding vault/DB).
+- Keep three ideas separate in code and UI: **processing locally**, **storing locally**, **transmitting externally** (the last is impossible by design). Default = store minimum.
+- Room DB + vault payloads encrypted with AES-256-GCM, key in Android Keystore (non-exportable), per-record random IV. Optional biometric/device-credential gate for Vault and Export. `FLAG_SECURE` on Vault/Result screens (optional toggle).
+- Safe parsing of all inputs (malformed URLs, huge strings, control characters). Never execute/open scanned content.
+- Permissions requested **only when the feature is used**, with a plain-language rationale first: camera (QR), notifications (alerts), SMS (optional auto-scan). Image picking uses the system photo picker (no storage permission).
+- Notifications hide content on lock screen by default.
+- "Delete all data" wipes DB, files, DataStore, keys.
+- `docs/PRIVACY.md` documents all data, where it lives, and how to delete it.
+
+---
+
+## 8. UI / UX DESIGN
+
+Feels like a **calm personal security assistant**, not a complicated antivirus dashboard.
+- Colours: Primary **deep navy `#0B1F3A`**, secondary **teal `#0E9F9A`**, safe **green `#2E9E5B`**, caution **amber `#F59E0B`**, high-risk **red `#D93025`**, background light neutral `#F5F7FA`, surface white. Provide a high-contrast variant for Elderly Mode.
+- Rounded cards (20dp), large touch targets (≥48dp, ≥56dp in Elderly Mode), highly readable typography (≥16sp body), generous spacing, simple icons + text labels everywhere.
+- Risk visuals: ring gauge + icon + label (never colour-only). High/Critical results use a clear red banner with an obvious "Don't click / don't share / don't pay" line.
+- Smooth, subtle animations only (kill-chain bar fill, gauge sweep); respect reduced-motion setting.
+- App icon: shield with a small eye/checkmark (original design, navy + teal). Splash: shield + "RakshakAI — Your Intelligent Digital Guardian".
+
+---
+
+## 9. DATA MODELS (Kotlin, serialisable)
+
+```kotlin
+data class ScanInput(val text: String, val source: Source /*MANUAL, SHARED, SMS, SCREENSHOT, TRANSCRIPT, QR*/, val languageHint: String = "auto")
+
+data class Evidence(val type: String, val phrase: String?, val start: Int?, val end: Int?, val description: String, val observed: Boolean /*false = inferred*/, val weight: Int)
+
+data class ScanResult(
+  val scanId: String, val timestamp: Long,
+  val riskScore: Int, val riskLevel: RiskLevel /*LOW, MEDIUM, HIGH, CRITICAL, UNCERTAIN flag separate*/,
+  val uncertain: Boolean, val confidence: Confidence /*LOW, MEDIUM, HIGH*/,
+  val language: String, val scamCategory: String?,
+  val intents: List<String>, val manipulation: List<String>,
+  val stagesReached: List<Int>, val nextMoves: List<NextMove>,
+  val urlResults: List<UrlResult>, val evidence: List<Evidence>,
+  val components: ScoreComponents /*M,S,U,P,C + overrides applied + dampeners applied*/,
+  val explanation: String, val whatCouldHappen: String, val recommendations: List<String>,
+  val processedOffline: Boolean = true
+)
+```
+Entities: `ScanHistoryEntity` (summary only), `VaultItemEntity` (encrypted blob + iv + type + createdAt + riskSnapshot + note + incidentId), `QuarantineEntity` (encrypted), `TrustedContactEntity` (encrypted phone), `IncidentEntity`, `FeedbackEntity`.
+
+---
+
+## 10. SEED DEMO / TEST DATA (load via Simulation Lab and use in unit tests)
+
+Expected levels are minimums/targets; tune the lexicon until all pass.
+
+| # | Text | Expected |
+|---|---|---|
+| 1 | `Dear customer, your SBI account will be blocked today. Update KYC immediately: http://sbi-kyc-update.xyz/login` | Critical (banking/KYC; lookalike URL) |
+| 2 | `Aapka SBI account aaj raat band ho jayega. KYC update karne ke liye turant is link pe click karein: http://bit.ly/3xKyc` | High/Critical (Hinglish; shortened URL) |
+| 3 | `आपका बैंक खाता आज रात बंद हो जाएगा। तुरंत KYC अपडेट करें और अपना OTP बताएं।` | High/Critical (Hindi; OTP request) |
+| 4 | `Share your OTP to verify your account.` | High (OTP theft, no link) |
+| 5 | `Congratulations! You won ₹50 lakh in KBC lottery. Pay ₹5000 processing fee to claim.` | High (lottery) |
+| 6 | `Part time job, earn ₹5000/day. Pay ₹500 registration fee to this UPI ID to start.` | High (job) |
+| 7 | `Guaranteed 5x returns in 7 days. Join our WhatsApp group and deposit now.` | Medium–High (investment) |
+| 8 | `Your electricity connection will be disconnected tonight. Pay the verification amount using this link.` | High (utility; **unseen-paraphrase test**) |
+| 9 | `Install AnyDesk to get your refund. Tell me the 9 digit code you see.` | Critical (remote access) |
+| 10 | `Pay ₹10 to release your parcel: http://courier-track.top/pay` | High (delivery; TLD) |
+| 11 | `123456 is your OTP for HDFC Bank NetBanking. Do not share this OTP with anyone. Bank never asks for OTP.` | **Low** (legit OTP) |
+| 12 | `Your Amazon order #402-1234567 has been shipped and will arrive tomorrow.` | **Low** |
+| 13 | `Reminder: your electricity bill of ₹1,240 is due on 25 Nov. Pay via the official app or website.` | **Low** (legit urgent-ish) |
+| 14 | `आपका बिजली बिल ₹1,240 है, अंतिम तिथि 25 नवंबर। भुगतान आधिकारिक ऐप से करें।` | **Low** (legit Hindi) |
+| 15 | `Hi` | Low / "insufficient context" |
+
+**Conversation demo ("digital arrest")** — expected stages: Hook → Authority → Fear → Isolation → Payment; next-move forecast = post-payment escalation; Isolation Breaker triggers.
+```
+Them: Hello, this is Inspector Rajesh Verma from CBI cyber cell. A parcel in your name contains illegal items.
+Them: A case is registered against you. You may be arrested today.
+Them: Do not tell anyone, and do not cut this call. Your family will be involved.
+Them: To clear your name, transfer ₹80,000 to the RBI safe account for verification.
+```
+**QR/UPI demo:** `upi://pay?pa=refund.helpdesk@upi&pn=Refund%20Desk&am=5000&tn=Receive%20refund` → warn: scanning a QR to *receive* money is a classic trick.
+**Link demos:** `https://sbi.co.in.secure-login.attacker.test/kyc` (High), `http://192.168.4.7/login` (High), `https://www.sbi.co.in` (Lower risk), `https://bit.ly/abc123` (Uncertain).
+
+---
+
+## 11. EDGE CASES (all must be handled gracefully)
+
+No indicators → Low risk, *not guaranteed safe* · very short text → "insufficient context" · suspicious URL inside otherwise normal text → analyse URL separately · unsupported language → limited-analysis warning · spelling mistakes/paraphrases → still analysed (normalisation + fuzzy match) · mixed languages → supported · unreadable/encrypted text → ask for readable content · legitimate but urgent message → don't treat urgency as proof · genuine bank URL + suspicious request → analyse content and URL independently · extremely long input → truncate with notice · rule files missing/corrupt → show "detector unavailable", **never pretend analysis succeeded** · OCR returns nothing → say so and let the user type text.
+
+---
+
+## 12. TESTING
+
+- **JUnit tests** for: normaliser, language detector, URL extractor, URL analyzer, brand detector, UPI parser, category rules, risk fusion (floors & dampeners), kill-chain/forecaster, explanation coverage. Include **all §10 samples** as parameterised tests asserting expected level bands, plus extra paraphrase, misspelling, Hinglish and legit-with-scam-words cases (≥ 60 total cases). Report false-positive count on the legit set (target: 0 High/Critical on legit samples).
+- **Compose UI tests (a few):** scan flow, history delete, elderly mode toggle.
+- **Privacy checks:** a test/CI script that fails the build if `INTERNET` appears in the merged manifest (`./gradlew :app:processDebugManifest` + grep) and if any network library is on the classpath. Document in `docs/TESTING.md`.
+- Performance sanity: log (non-sensitive) scan duration in debug; target < 2 s on mid-range phones.
+
+---
+
+## 13. BUILD & DELIVERY
+
+1. Produce a complete Android Studio / Gradle project that opens and syncs with no manual steps.
+2. Build with `./gradlew assembleDebug` and report the path `app/build/outputs/apk/debug/app-debug.apk`. If you cannot run Gradle in your environment (no SDK/network), say so explicitly and give exact steps: install Android Studio → open project → Sync → *Build ▸ Build APK(s)*, plus `adb install` instructions; do **not** pretend the APK was built.
+3. `README.md`: what the app does, how to build/install, how to demo each feature (use Simulation Lab), the honest limitations list (below), and a 2-minute demo script.
+4. **Limitations section (must appear in README and in More ▸ About):** can't read WhatsApp directly (share/paste only) · can't delete messages in other apps (app-level quarantine only) · can't block or lock payments (pause-and-verify reminder only) · call shield is transcript/simulated, not live call monitoring · family alerts use the user's own SMS/share action, the guardian dashboard is a simulation · rule-based detection can miss novel scams and can false-alarm — scores are not proof.
+
+---
+
+## 14. BUILD ORDER (compile and run after each phase; commit per phase)
+
+1. **Foundation:** project, theme, navigation, strings (en+hi), DI, onboarding, settings DataStore, rule-file loader.
+2. **Core intelligence (P0):** preprocessor, language detect, lexicons, intent + manipulation + category, URL extractor/analyzer, risk fusion, explanation/recommendation engine, Result screen, Message scanner, Share target, unit tests with §10 data.
+3. **Predictive layer (P0):** conversation splitter/composer, kill-chain tracker, forecaster, timeline UI.
+4. **Protection actions (P0):** Pre-Action Safety Check, Emergency Assistant, Isolation Breaker + trusted contacts, Cross-signal engine, Coercion/Pressure estimator.
+5. **Investigation tools (P1):** Link scanner screen, brand detector, QR/UPI (camera + gallery), screenshot OCR.
+6. **Evidence & privacy (P0/P1):** Keystore crypto, Vault, Quarantine, Replay Timeline, History, Privacy Centre (runtime permission proof), Delete-all.
+7. **Extras (P1/P2):** Elderly Mode + TTS, Simulation Lab, Call transcript demo, Remote-access app check, Family Guardian (simulated dashboard), optional SMS auto-scan + notifications, Safety Centre + quiz.
+8. **Hardening:** edge cases (§11), false-positive tuning, accessibility pass, manifest/network audit, README/docs, build the APK.
+
+---
+
+## 15. DEFINITION OF DONE (acceptance checklist)
+
+- [ ] App installs on Android 10+ and **all core scans work in airplane mode**.
+- [ ] Merged manifest has **no INTERNET permission**; Privacy Centre shows this from a runtime check.
+- [ ] Paste/share a message → result with score, level, category, intents, tactics, highlighted evidence, explanation, recommendations.
+- [ ] English, Hindi and Hinglish samples (§10) produce expected levels; legit samples stay Low; the unseen "electricity disconnection" paraphrase is flagged.
+- [ ] Conversation scan shows stage timeline, cumulative risk, and a "possible next move" with safe advice.
+- [ ] Link scanner flags lookalike / IP / shortener / suspicious TLD / brand-mismatch and **never opens links**; HTTPS isn't treated as safe.
+- [ ] QR/UPI scanner decodes and warns without launching payments.
+- [ ] Screenshot → OCR (English + Hindi) → analysis works offline.
+- [ ] Pre-Action Safety Check shows decision + forced pause + verification steps + the "cannot lock payments" note.
+- [ ] Isolation Breaker triggers at High and creates a content-free trusted-contact alert via the user's own SMS/share action.
+- [ ] Emergency Assistant decision tree + evidence checklist + editable complaint draft (copy/share), works without any model.
+- [ ] Vault is encrypted (Keystore AES-GCM), consent-based, with export/delete; Quarantine restore/delete; Replay Timeline renders an incident.
+- [ ] History can be viewed, deleted per item, cleared, and disabled; default stores summaries only.
+- [ ] Elderly Mode (large text, high contrast, Hindi/English read-aloud) works; screen-reader labels present; risk never colour-only.
+- [ ] All simulated features carry visible SIMULATED/DEMO badges; limitations are stated in-app.
+- [ ] ≥ 60 unit tests pass; no crash on empty/huge/malformed input.
+- [ ] `app-debug.apk` produced (or exact build steps given if it could not be built).
+
+*Safety & accuracy note (keep in app + README): A risk score is not proof of fraud. Predictions are uncertain. RakshakAI does not claim real-time call monitoring, message deletion, payment blocking, WhatsApp access or fully offline operation beyond what is implemented and tested.*

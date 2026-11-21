@@ -1,0 +1,46 @@
+{
+  "verdicts": {
+    "CRITICAL": "Multiple strong scam-pattern signals detected. Pause and do not act yet.",
+    "HIGH": "High risk signals detected. Avoid clicking links, sharing codes, or sending money.",
+    "MEDIUM": "Some suspicious signals found. Verify independently before taking any action.",
+    "LOW": "No strong scam indicators detected — this is not a guarantee of safety.",
+    "UNCERTAIN": "Insufficient or mixed evidence. Verify through an official channel before acting."
+  },
+  "elderly_verdicts": {
+    "CRITICAL": "Warning! This message looks very risky. Do not pay, click, or share any code.",
+    "HIGH": "Warning! This message may be fake. Someone could be trying to take your money or details.",
+    "MEDIUM": "Be careful! Some parts of this message look unusual. Ask a family member first.",
+    "LOW": "No clear warning signs found here, but still be careful with money and OTPs.",
+    "UNCERTAIN": "Not enough information to be sure. Please ask a family member or check your official app."
+  },
+  "intent_labels": {
+    "OTP": "Share an OTP, PIN, CVV, or password",
+    "MONEY": "Send money, pay a fee, or approve a payment",
+    "PERSONAL_INFO": "Share Aadhaar, PAN, bank account, or KYC details",
+    "APP_INSTALL": "Install an app or allow remote screen sharing",
+    "LINK_CLICK": "Open an external link or join a chat group",
+    "CALL_BACK": "Call back or continue on a private call"
+  },
+  "manipulation_descriptions": {
+    "fear": "Uses fear of account closure, disconnection, arrest, or legal trouble.",
+    "urgency": "Pressures you with tight deadlines so you act before checking.",
+    "authority": "Claims to be a bank, police, CBI, customs, or government body.",
+    "greed": "Promises prizes, guaranteed profits, refunds, or easy daily income.",
+    "isolation": "Tells you not to inform family or not to disconnect the call.",
+    "false_trust": "Uses official-sounding reassurances or promises money will be returned."
+  },
+  "category_consequences": {
+    "digital_arrest": "Scammers posing as officials may try to keep you isolated on a call and pressure you into transferring money to a fake 'safe account'.",
+    "remote_access": "Installing a screen-sharing app lets someone view your OTPs, banking apps, and potentially guide or perform unauthorised actions.",
+    "otp_theft": "Sharing an OTP, PIN, or CVV can allow immediate unauthorised transactions or account takeover.",
+    "kyc_fraud": "Fake KYC links often capture netbanking logins, card numbers, or identity documents.",
+    "utility_disconnection": "Fake disconnection warnings commonly try to rush you into paying a stranger or installing a malicious app.",
+    "lottery_prize": "Asking for an upfront fee or tax to claim a prize is a classic pattern where money is lost without any real reward.",
+    "job_fraud": "Jobs requiring upfront registration fees or 'prepaid tasks' often escalate into larger unrecoverable deposits.",
+    "investment_fraud": "Promises of guaranteed or multiplied returns are frequently used to draw victims into fake trading groups.",
+    "delivery_fraud": "Fake parcel hold messages use small fees to collect card or UPI details or trick you into larger charges.",
+    "payment_refund": "Scanning a QR code or entering your UPI PIN sends money out of your account — it is never required to receive money.",
+    "banking_fraud": "Account-block scares are used to push people toward phishing pages or credential sharing.",
+    "other_suspicious": "Following unverified urgency requests may expose money, credentials, or personal data."
+  }
+}

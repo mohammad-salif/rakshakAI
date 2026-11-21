@@ -1,0 +1,148 @@
+{
+  "stages": [
+    {
+      "stage": 1,
+      "code": "S1",
+      "name_en": "Hook / Contact",
+      "name_hi": "पहला संपर्क / लालच या झांसा",
+      "next_moves": [
+        {
+          "stage": 2,
+          "title_en": "Authority or false trust claim",
+          "title_hi": "अधिकारी या बैंक प्रतिनिधि बनने का दावा",
+          "likelihood": "LIKELY",
+          "advice_en": "Do not reply; verify through the official app or website you open yourself.",
+          "advice_hi": "जवाब न दें; खुद आधिकारिक ऐप या वेबसाइट खोलकर जांच करें।"
+        },
+        {
+          "stage": 3,
+          "title_en": "Fear or artificial urgency",
+          "title_hi": "डर या तुरंत कार्रवाई का दबाव",
+          "likelihood": "POSSIBLE",
+          "advice_en": "Real banks and agencies rarely demand instant action over an unexpected chat.",
+          "advice_hi": "असली बैंक या सरकारी विभाग अचानक मैसेज से तुरंत कार्रवाई का दबाव नहीं डालते।"
+        }
+      ]
+    },
+    {
+      "stage": 2,
+      "code": "S2",
+      "name_en": "Authority / Trust",
+      "name_hi": "अधिकार / झूठा भरोसा",
+      "next_moves": [
+        {
+          "stage": 3,
+          "title_en": "Fear or urgency pressure (arrest, block, penalty)",
+          "title_hi": "गिरफ्तारी, खाता बंद होने या जुर्माने का डर",
+          "likelihood": "LIKELY",
+          "advice_en": "Real officials do not threaten over WhatsApp or SMS; hang up and call an official number.",
+          "advice_hi": "असली अधिकारी व्हाट्सएप या एसएमएस पर धमकी नहीं देते; कॉल काटकर आधिकारिक नंबर पर जांच करें।"
+        },
+        {
+          "stage": 4,
+          "title_en": "Isolation (asking you not to tell family)",
+          "title_hi": "परिवार या किसी को न बताने का दबाव",
+          "likelihood": "POSSIBLE",
+          "advice_en": "Talk to a trusted family member before taking any step.",
+          "advice_hi": "कोई भी कदम उठाने से पहले परिवार के किसी भरोसेमंद सदस्य से बात करें।"
+        }
+      ]
+    },
+    {
+      "stage": 3,
+      "code": "S3",
+      "name_en": "Fear / Urgency",
+      "name_hi": "डर / जल्दबाजी",
+      "next_moves": [
+        {
+          "stage": 5,
+          "title_en": "Action request (link, remote app, OTP, or ID)",
+          "title_hi": "लिंक खोलने, ऐप डालने, ओटीपी या आईडी देने की मांग",
+          "likelihood": "LIKELY",
+          "advice_en": "Pause for 10 minutes, ask family, and never share an OTP or PIN.",
+          "advice_hi": "10 मिनट रुकें, परिवार से पूछें, और कभी भी ओटीपी या पिन साझा न करें।"
+        },
+        {
+          "stage": 4,
+          "title_en": "Secrecy or stay-on-call isolation",
+          "title_hi": "बात गुप्त रखने या कॉल पर बने रहने का दबाव",
+          "likelihood": "POSSIBLE",
+          "advice_en": "Hang up if anyone orders you not to talk to family or bank staff.",
+          "advice_hi": "अगर कोई परिवार या बैंक से बात करने से मना करे तो तुरंत कॉल काट दें।"
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "code": "S4",
+      "name_en": "Isolation",
+      "name_hi": "अकेला करना / गोपनीयता का दबाव",
+      "next_moves": [
+        {
+          "stage": 5,
+          "title_en": "Credential, OTP, or remote-access app request",
+          "title_hi": "ओटीपी, पासवर्ड या रिमोट ऐप की मांग",
+          "likelihood": "LIKELY",
+          "advice_en": "Break the secrecy immediately — tell someone you trust right now.",
+          "advice_hi": "चुप्पी तुरंत तोड़ें — अभी किसी भरोसेमंद व्यक्ति को बताएं।"
+        },
+        {
+          "stage": 6,
+          "title_en": "Payment or 'safe account' transfer demand",
+          "title_hi": "पैसे या 'सुरक्षित खाते' में ट्रांसफर की मांग",
+          "likelihood": "LIKELY",
+          "advice_en": "No police or RBI 'safe account' exists for clearing your name. Never transfer money.",
+          "advice_hi": "नाम साफ करने के लिए कोई पुलिस या आरबीआई 'सेफ अकाउंट' नहीं होता। पैसे बिल्कुल न भेजें।"
+        }
+      ]
+    },
+    {
+      "stage": 5,
+      "code": "S5",
+      "name_en": "Action Request",
+      "name_hi": "कार्रवाई की मांग (लिंक/ऐप/ओटीपी)",
+      "next_moves": [
+        {
+          "stage": 6,
+          "title_en": "Direct payment, fee, or UPI collect demand",
+          "title_hi": "पैसे, फीस या यूपीआई पेमेंट की मांग",
+          "likelihood": "LIKELY",
+          "advice_en": "Do not click, install, or share codes; run RakshakAI Pre-Action Safety Check first.",
+          "advice_hi": "लिंक न खोलें, ऐप न डालें और कोड न दें; पहले रक्षकएआई प्री-एक्शन सुरक्षा जांच चलाएं।"
+        }
+      ]
+    },
+    {
+      "stage": 6,
+      "code": "S6",
+      "name_en": "Payment Demand",
+      "name_hi": "पैसे की मांग",
+      "next_moves": [
+        {
+          "stage": 7,
+          "title_en": "Post-payment escalation (extra fees, tax, or silence)",
+          "title_hi": "भुगतान के बाद और फीस या नई धमकी",
+          "likelihood": "LIKELY",
+          "advice_en": "Do not pay anything. If money was already sent, call 1930 and your bank right away.",
+          "advice_hi": "कोई भुगतान न करें। अगर पैसे चले गए हैं तो तुरंत 1930 और अपने बैंक को कॉल करें।"
+        }
+      ]
+    },
+    {
+      "stage": 7,
+      "code": "S7",
+      "name_en": "Post-Payment Escalation",
+      "name_hi": "भुगतान के बाद दबाव बढ़ाना",
+      "next_moves": [
+        {
+          "stage": 7,
+          "title_en": "Additional 'clearance' fees or repeated threats",
+          "title_hi": "अतिरिक्त शुल्क या बार-बार धमकी",
+          "likelihood": "LIKELY",
+          "advice_en": "Stop all contact immediately and open RakshakAI Emergency Assistant.",
+          "advice_hi": "तुरंत संपर्क बंद करें और रक्षकएआई आपातकालीन सहायता खोलें।"
+        }
+      ]
+    }
+  ]
+}

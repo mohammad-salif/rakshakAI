@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RakshakAI</string>
+    <string name="app_tagline">Your Intelligent Digital Guardian</string>
+
+    <!-- Bottom Navigation (5 Tabs) -->
+    <string name="tab_home">Home</string>
+    <string name="tab_scan">🔍 Detect</string>
+    <string name="tab_protect">Protect</string>
+    <string name="tab_vault">Vault</string>
+    <string name="tab_more">More</string>
+
+    <!-- Home -->
+    <string name="home_status_title">Protected · Works Offline</string>
+    <string name="home_status_subtitle">On-device analysis · No internet permission</string>
+    <string name="home_quick_actions">Quick Scan Tools</string>
+    <string name="home_action_message">Scan Message</string>
+    <string name="home_action_message_desc">Paste SMS, WhatsApp, or chat</string>
+    <string name="home_action_link">Scan Link</string>
+    <string name="home_action_link_desc">Check URL &amp; brand before tapping</string>
+    <string name="home_action_screenshot">Scan Screenshot</string>
+    <string name="home_action_screenshot_desc">Offline OCR (English + Hindi)</string>
+    <string name="home_action_qr">Scan QR / UPI</string>
+    <string name="home_action_qr_desc">Inspect payment QR safely</string>
+    <string name="home_emergency_cta">Emergency — I think I was scammed</string>
+    <string name="home_recent_scans">Recent Scans (Summary Only)</string>
+    <string name="home_safety_centre">Open Safety Centre &amp; Quiz</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_finish">Start Protecting</string>
+    <string name="onboarding_step1_title">Understand the scammer\'s next move</string>
+    <string name="onboarding_step1_body">RakshakAI doesn\'t just flag risky messages — it explains what the sender wants next, highlights pressure tactics, and gives you calm steps before harm happens.</string>
+    <string name="onboarding_step2_title">100% On-Device · Zero Internet Permission</string>
+    <string name="onboarding_step2_body">RakshakAI does not even declare the Android INTERNET permission. Nothing leaves your phone — your messages, screenshots, and vault stay offline.</string>
+    <string name="onboarding_step3_title">Choose Your Language</string>
+    <string name="onboarding_step3_body">RakshakAI supports English, Hindi (हिन्दी), and Hinglish messages out of the box.</string>
+    <string name="onboarding_step4_title">Optional Setup</string>
+    <string name="onboarding_step4_body">You can share text/images directly from WhatsApp or SMS to RakshakAI anytime. Notifications and SMS auto-scan are completely optional.</string>
+
+    <!-- Result Screen -->
+    <string name="result_processed_offline">Processed on this device · Zero internet access</string>
+    <string name="result_wants_you_to">What the sender wants you to do</string>
+    <string name="result_pressure_tactics">Pressure tactics used</string>
+    <string name="result_why_suspicious">Why this is suspicious (Evidence)</string>
+    <string name="result_what_could_happen">What could happen if you follow it</string>
+    <string name="result_what_to_do">What to do now</string>
+    <string name="result_possible_next_move">Possible next move (Forecast)</string>
+    <string name="result_why_this_score">Why this score?</string>
+    <string name="result_feedback_prompt">Was this helpful?</string>
+    <string name="result_footer_disclaimer">A risk score is not proof of fraud. Predictions are possibilities, not certainties.</string>
+    <string name="result_read_aloud">Read Aloud</string>
+
+    <!-- Limitations -->
+    <string name="limitations_title">Honest Capabilities &amp; Limitations</string>
+    <string name="limitations_body">• Cannot read WhatsApp directly (use Share or Paste).\n• Cannot delete SMS or WhatsApp messages in other apps (Quarantine keeps an encrypted copy inside RakshakAI only).\n• Cannot block or lock payments in banking/UPI apps (Pre-Action Check provides a pause-and-verify reminder).\n• Live Call Shield uses pasted transcripts or scripted demos — RakshakAI does not record or listen to real phone calls.\n• Family Guardian alerts open your own SMS/Share sheet; the second-device Guardian Dashboard is a simulation.\n• Rule-based detection can miss novel scams or raise false alarms — scores are guidance, not proof.</string>
+</resources>

@@ -1,0 +1,112 @@
+{
+  "brands": [
+    {
+      "id": "sbi",
+      "name": "State Bank of India (SBI)",
+      "aliases": ["sbi", "state bank", "yono", "onlinesbi", "एसबीआई", "स्टेट बैंक"],
+      "official_domains": ["sbi.co.in", "onlinesbi.sbi", "sbi.bank.in", "yonosbi.com"]
+    },
+    {
+      "id": "hdfc",
+      "name": "HDFC Bank",
+      "aliases": ["hdfc", "hdfc bank", "एचडीएफसी"],
+      "official_domains": ["hdfcbank.com", "hdfcbank.net.in"]
+    },
+    {
+      "id": "icici",
+      "name": "ICICI Bank",
+      "aliases": ["icici", "icici bank", "imobile", "आईसीआईसीआई"],
+      "official_domains": ["icicibank.com"]
+    },
+    {
+      "id": "axis",
+      "name": "Axis Bank",
+      "aliases": ["axis", "axis bank", "एक्सिस बैंक"],
+      "official_domains": ["axisbank.com"]
+    },
+    {
+      "id": "pnb",
+      "name": "Punjab National Bank (PNB)",
+      "aliases": ["pnb", "punjab national bank", "पीएनबी"],
+      "official_domains": ["pnbindia.in", "netpnb.com"]
+    },
+    {
+      "id": "kotak",
+      "name": "Kotak Mahindra Bank",
+      "aliases": ["kotak", "kotak bank", "कोटक"],
+      "official_domains": ["kotak.com", "kotakbank.com"]
+    },
+    {
+      "id": "paytm",
+      "name": "Paytm",
+      "aliases": ["paytm", "पेटीएम"],
+      "official_domains": ["paytm.com", "paytmbank.com"]
+    },
+    {
+      "id": "phonepe",
+      "name": "PhonePe",
+      "aliases": ["phonepe", "phone pe", "फोनपे"],
+      "official_domains": ["phonepe.com"]
+    },
+    {
+      "id": "gpay",
+      "name": "Google Pay",
+      "aliases": ["google pay", "gpay", "g pay", "गूगल पे"],
+      "official_domains": ["pay.google.com", "google.com"]
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "aliases": ["amazon", "amazon india", "अमेज़न", "अमेजन"],
+      "official_domains": ["amazon.in", "amazon.com", "amzn.in"]
+    },
+    {
+      "id": "flipkart",
+      "name": "Flipkart",
+      "aliases": ["flipkart", "फ्लिपकार्ट"],
+      "official_domains": ["flipkart.com"]
+    },
+    {
+      "id": "india_post",
+      "name": "India Post",
+      "aliases": ["india post", "indian post", "speed post", "डाक विभाग"],
+      "official_domains": ["indiapost.gov.in"]
+    },
+    {
+      "id": "uidai",
+      "name": "UIDAI / Aadhaar",
+      "aliases": ["uidai", "aadhaar", "aadhar", "आधार"],
+      "official_domains": ["uidai.gov.in", "myaadhaar.uidai.gov.in"]
+    },
+    {
+      "id": "income_tax",
+      "name": "Income Tax Department",
+      "aliases": ["income tax", "e-filing", "itr", "आयकर विभाग"],
+      "official_domains": ["incometax.gov.in", "incometaxindia.gov.in"]
+    },
+    {
+      "id": "npci",
+      "name": "NPCI / BHIM",
+      "aliases": ["npci", "bhim", "bhim upi", "एनपीसीआई"],
+      "official_domains": ["npci.org.in", "bhimupi.org.in"]
+    },
+    {
+      "id": "irctc",
+      "name": "IRCTC",
+      "aliases": ["irctc", "indian railways", "आईआरसीटीसी"],
+      "official_domains": ["irctc.co.in"]
+    },
+    {
+      "id": "jio",
+      "name": "Reliance Jio",
+      "aliases": ["jio", "myjio", "जियो"],
+      "official_domains": ["jio.com"]
+    },
+    {
+      "id": "airtel",
+      "name": "Airtel",
+      "aliases": ["airtel", "airtel thanks", "एयरटेल"],
+      "official_domains": ["airtel.in"]
+    }
+  ]
+}
